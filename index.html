@@ -411,6 +411,197 @@
       0%   { transform: translateY(-20px) rotate(0deg); opacity: 1; }
       100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
     }
+
+    /* ── Quiz mode ── */
+    .quiz-type-row {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 16px;
+    }
+
+    .qtype-btn {
+      flex: 1;
+      border: 2.5px solid #ddd;
+      border-radius: 14px;
+      padding: 9px 4px;
+      font-size: 13px;
+      font-weight: 700;
+      font-family: 'Nunito', sans-serif;
+      cursor: pointer;
+      background: white;
+      color: #888;
+      transition: all 0.2s;
+      line-height: 1.3;
+      text-align: center;
+    }
+
+    .qtype-btn.active {
+      border-color: #f093fb;
+      background: linear-gradient(135deg, #667eea, #f093fb);
+      color: white;
+    }
+
+    .quiz-scoreboard {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: #f8f8fc;
+      border-radius: 16px;
+      padding: 12px 18px;
+      margin-bottom: 16px;
+    }
+
+    .quiz-score-num {
+      font-size: 28px;
+      font-weight: 900;
+      color: #667eea;
+    }
+
+    .quiz-score-label {
+      font-size: 13px;
+      color: #aaa;
+      font-weight: 700;
+    }
+
+    .quiz-question-box {
+      background: linear-gradient(145deg, #667eea, #764ba2);
+      border-radius: 22px;
+      padding: 28px 20px;
+      text-align: center;
+      margin-bottom: 18px;
+      min-height: 160px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .quiz-question-label {
+      font-size: 15px;
+      color: rgba(255,255,255,0.75);
+      font-weight: 700;
+      margin-bottom: 10px;
+    }
+
+    .quiz-q-emoji { font-size: 64px; line-height: 1; }
+    .quiz-q-word  { font-size: 28px; font-weight: 900; color: white; margin-top: 6px; letter-spacing: 2px; }
+    .quiz-q-letter { font-size: 88px; font-weight: 900; color: white; line-height: 1; text-shadow: 0 4px 12px rgba(0,0,0,0.2); }
+    .quiz-sound-icon { font-size: 72px; cursor: pointer; transition: transform 0.15s; }
+    .quiz-sound-icon:active { transform: scale(0.9); }
+
+    .quiz-choices {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+
+    .quiz-choice-btn {
+      border: 3px solid #e8e8f0;
+      border-radius: 18px;
+      padding: 16px 10px;
+      font-size: 22px;
+      font-weight: 900;
+      font-family: 'Nunito', sans-serif;
+      cursor: pointer;
+      background: white;
+      color: #333;
+      transition: transform 0.12s, border-color 0.15s, background 0.15s;
+      min-height: 76px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      line-height: 1.2;
+    }
+
+    .quiz-choice-btn:active { transform: scale(0.95); }
+
+    .quiz-choice-btn.correct {
+      border-color: #1DD1A1;
+      background: #e8fff7;
+      color: #1DD1A1;
+    }
+
+    .quiz-choice-btn.wrong {
+      border-color: #FF6B6B;
+      background: #fff0f0;
+      color: #FF6B6B;
+    }
+
+    .quiz-choice-btn.reveal {
+      border-color: #1DD1A1;
+      background: #e8fff7;
+      color: #1DD1A1;
+    }
+
+    .quiz-choice-sub {
+      font-size: 13px;
+      font-weight: 700;
+      opacity: 0.7;
+    }
+
+    .quiz-next-btn {
+      width: 100%;
+      border: none;
+      border-radius: 18px;
+      padding: 16px;
+      font-size: 20px;
+      font-weight: 900;
+      font-family: 'Nunito', sans-serif;
+      background: linear-gradient(135deg, #667eea, #f093fb);
+      color: white;
+      cursor: pointer;
+      transition: transform 0.1s;
+      margin-bottom: 10px;
+    }
+
+    .quiz-next-btn:active { transform: scale(0.97); }
+
+    /* Quiz result screen */
+    .quiz-result {
+      text-align: center;
+      padding: 10px 0;
+    }
+
+    .quiz-result-trophy { font-size: 80px; }
+
+    .quiz-result-title {
+      font-size: 30px;
+      font-weight: 900;
+      color: #333;
+      margin: 12px 0 6px;
+    }
+
+    .quiz-result-score {
+      font-size: 52px;
+      font-weight: 900;
+      background: linear-gradient(135deg, #667eea, #f093fb);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .quiz-result-sub {
+      font-size: 18px;
+      color: #888;
+      margin: 6px 0 20px;
+    }
+
+    .quiz-retry-btn {
+      width: 100%;
+      border: none;
+      border-radius: 18px;
+      padding: 16px;
+      font-size: 20px;
+      font-weight: 900;
+      font-family: 'Nunito', sans-serif;
+      background: linear-gradient(135deg, #43e97b, #38f9d7);
+      color: white;
+      cursor: pointer;
+      margin-bottom: 10px;
+    }
   </style>
 </head>
 <body>
@@ -467,13 +658,22 @@ const PRAISE = [
 // ═══════════════════════════════════════════════
 //  STATE
 // ═══════════════════════════════════════════════
-let mode       = 'card';   // 'card' | 'trace'
+let mode       = 'card';   // 'card' | 'trace' | 'quiz'
 let idx        = 0;
 let showCase   = 'both';   // 'upper' | 'lower' | 'both'
 let traceCase  = 'upper';
 let totalStars = 0;
 let isDrawing  = false;
 let canvas, ctx;
+
+// ── Quiz state ──
+let quizType     = 'letter';  // 'letter' | 'emoji' | 'sound'
+let quizQ        = null;      // current question
+let quizScore    = { correct: 0, total: 0 };
+let quizAnswered = null;      // null | 'correct' | 'wrong'
+let quizChosen   = -1;
+let quizDone     = false;
+const QUIZ_MAX   = 10;
 
 // ═══════════════════════════════════════════════
 //  SPEECH
@@ -639,6 +839,76 @@ function bindCanvasEvents() {
 }
 
 // ═══════════════════════════════════════════════
+//  QUIZ LOGIC
+// ═══════════════════════════════════════════════
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length-1; i > 0; i--) {
+    const j = Math.floor(Math.random()*(i+1));
+    [a[i],a[j]] = [a[j],a[i]];
+  }
+  return a;
+}
+
+function pickDistractors(answerIdx, count=3) {
+  const pool = LETTERS.map((_,i) => i).filter(i => i !== answerIdx);
+  const shuffled = shuffle(pool);
+  return shuffled.slice(0, count);
+}
+
+function generateQuestion() {
+  const answerIdx = Math.floor(Math.random() * 26);
+  const distractors = pickDistractors(answerIdx, 3);
+  const choices = shuffle([answerIdx, ...distractors]);
+  quizQ = { answerIdx, choices };
+  quizAnswered = null;
+  quizChosen = -1;
+  if (quizType === 'sound') {
+    // auto-play the sound after a short delay
+    setTimeout(() => speakLetter(LETTERS[answerIdx].u), 400);
+  }
+}
+
+function startQuiz() {
+  quizScore = { correct: 0, total: 0 };
+  quizDone = false;
+  generateQuestion();
+  render();
+}
+
+function answerQuiz(choiceIdx) {
+  if (quizAnswered !== null) return;
+  quizChosen = choiceIdx;
+  const correct = (choiceIdx === quizQ.answerIdx);
+  quizAnswered = correct ? 'correct' : 'wrong';
+  quizScore.total++;
+  if (correct) {
+    quizScore.correct++;
+    launchConfetti();
+    const p = PRAISE[Math.floor(Math.random()*PRAISE.length)];
+    speak(p.s, 0.9);
+    totalStars++;
+  } else {
+    speak('Try again!', 0.9);
+  }
+  render();
+}
+
+function nextQuizQuestion() {
+  if (quizScore.total >= QUIZ_MAX) {
+    quizDone = true;
+    const pct = quizScore.correct / QUIZ_MAX;
+    if (pct >= 0.8) { launchConfetti(); speak('Excellent! Perfect score!', 0.9); }
+    else if (pct >= 0.6) { speak('Good job!', 0.9); }
+    else { speak('Keep practicing!', 0.9); }
+    render();
+  } else {
+    generateQuestion();
+    render();
+  }
+}
+
+// ═══════════════════════════════════════════════
 //  RENDER
 // ═══════════════════════════════════════════════
 function render() {
@@ -656,10 +926,11 @@ function render() {
     <div class="tabs">
       <button class="tab ${mode==='card'?'active':''}"  onclick="switchMode('card')">📇 カード</button>
       <button class="tab ${mode==='trace'?'active':''}" onclick="switchMode('trace')">✏️ なぞり書き</button>
+      <button class="tab ${mode==='quiz'?'active':''}"  onclick="switchMode('quiz')">🎯 テスト</button>
     </div>
 
     <div class="progress-wrap">
-      <div class="progress-fill" style="width:${(idx+1)/26*100}%"></div>
+      <div class="progress-fill" style="width:${mode==='quiz' ? (quizScore.total/QUIZ_MAX*100) : (idx+1)/26*100}%"></div>
     </div>
   `;
 
@@ -752,6 +1023,130 @@ function render() {
     `;
   }
 
+  // ── QUIZ MODE render ──
+  if (mode === 'quiz') {
+
+    if (quizDone) {
+      // ── Result screen ──
+      const pct = quizScore.correct / QUIZ_MAX;
+      let trophy = '🥇', msg = 'かんぺき！';
+      if (pct < 0.4)       { trophy = '💪'; msg = 'もっとれんしゅう！'; }
+      else if (pct < 0.7)  { trophy = '🥈'; msg = 'よくがんばった！'; }
+      else if (pct < 1.0)  { trophy = '🥇'; msg = 'すごい！'; }
+      else                 { trophy = '🏆'; msg = 'パーフェクト！！'; }
+
+      inner += `
+        <div class="quiz-result">
+          <div class="quiz-result-trophy">${trophy}</div>
+          <div class="quiz-result-title">${msg}</div>
+          <div class="quiz-result-score">${quizScore.correct} / ${QUIZ_MAX}</div>
+          <div class="quiz-result-sub">もんだい ${QUIZ_MAX}こ中 ${quizScore.correct}こ せいかい ⭐</div>
+          <button class="quiz-retry-btn" onclick="startQuiz()">🔄 もういちど チャレンジ！</button>
+          <button class="quiz-next-btn" onclick="switchMode('card')" style="background:linear-gradient(135deg,#a18cd1,#fbc2eb);">📇 カードで ふくしゅう</button>
+        </div>
+      `;
+
+    } else {
+      if (!quizQ) generateQuestion();
+      const Q = quizQ;
+      const ansL = LETTERS[Q.answerIdx];
+
+      // ── Quiz type selector ──
+      inner += `
+        <div class="quiz-type-row">
+          <button class="qtype-btn ${quizType==='letter'?'active':''}" onclick="setQuizType('letter')">🔤<br>もじを<br>えらぼう</button>
+          <button class="qtype-btn ${quizType==='emoji'?'active':''}"  onclick="setQuizType('emoji')">🖼️<br>えもじを<br>えらぼう</button>
+          <button class="qtype-btn ${quizType==='sound'?'active':''}"  onclick="setQuizType('sound')">🔊<br>おとで<br>えらぼう</button>
+        </div>
+      `;
+
+      // ── Scoreboard ──
+      inner += `
+        <div class="quiz-scoreboard">
+          <div>
+            <div class="quiz-score-num">${quizScore.correct}</div>
+            <div class="quiz-score-label">せいかい</div>
+          </div>
+          <div style="font-size:22px;color:#ddd;">|</div>
+          <div>
+            <div class="quiz-score-num" style="color:#f093fb;">${quizScore.total}</div>
+            <div class="quiz-score-label">かいめ</div>
+          </div>
+          <div style="font-size:22px;color:#ddd;">|</div>
+          <div>
+            <div class="quiz-score-num" style="color:#aaa;">${QUIZ_MAX - quizScore.total}</div>
+            <div class="quiz-score-label">のこり</div>
+          </div>
+        </div>
+      `;
+
+      // ── Question box ──
+      let qBoxContent = '';
+      if (quizType === 'letter') {
+        qBoxContent = `
+          <div class="quiz-question-label">この えもじは どの もじ？</div>
+          <div class="quiz-q-emoji">${ansL.emoji}</div>
+          <div class="quiz-q-word">${ansL.word}</div>
+        `;
+      } else if (quizType === 'emoji') {
+        qBoxContent = `
+          <div class="quiz-question-label">この もじは どの えもじ？</div>
+          <div class="quiz-q-letter">${ansL.u}</div>
+          <div style="font-size:18px;font-weight:700;color:rgba(255,255,255,0.6);margin-top:4px;">${ansL.l}</div>
+        `;
+      } else {
+        // sound
+        qBoxContent = `
+          <div class="quiz-question-label">おとを きいて もじを えらぼう！</div>
+          <div class="quiz-sound-icon" onclick="speakLetter('${ansL.u}')">🔊</div>
+          <div style="font-size:14px;color:rgba(255,255,255,0.65);margin-top:8px;font-weight:700;">↑ タップして もういちど きく</div>
+        `;
+      }
+
+      inner += `<div class="quiz-question-box">${qBoxContent}</div>`;
+
+      // ── Choices ──
+      inner += `<div class="quiz-choices">`;
+      Q.choices.forEach(ci => {
+        const CL = LETTERS[ci];
+        let btnClass = 'quiz-choice-btn';
+        if (quizAnswered !== null) {
+          if (ci === Q.answerIdx) btnClass += ' reveal';
+          if (ci === quizChosen && quizAnswered === 'wrong') btnClass += ' wrong';
+        }
+
+        let btnContent = '';
+        if (quizType === 'letter') {
+          btnContent = `${CL.u}<div class="quiz-choice-sub">${CL.l}</div>`;
+        } else if (quizType === 'emoji') {
+          btnContent = `${CL.emoji}<div class="quiz-choice-sub">${CL.word}</div>`;
+        } else {
+          btnContent = `${CL.u}<div class="quiz-choice-sub">${CL.l}</div>`;
+        }
+
+        const disabled = quizAnswered !== null ? 'style="cursor:default;"' : '';
+        inner += `<button class="${btnClass}" onclick="answerQuiz(${ci})" ${disabled}>${btnContent}</button>`;
+      });
+      inner += `</div>`;
+
+      // ── Feedback / Next button ──
+      if (quizAnswered === 'correct') {
+        inner += `<button class="quiz-next-btn" onclick="nextQuizQuestion()">つぎの もんだい ▶</button>`;
+      } else if (quizAnswered === 'wrong') {
+        inner += `
+          <div style="text-align:center;font-size:18px;font-weight:700;color:#FF6B6B;margin-bottom:10px;">
+            ざんねん… こたえは「${ansL.u}」だよ！ ${ansL.emoji}
+          </div>
+          <button class="quiz-next-btn" onclick="nextQuizQuestion()">つぎの もんだい ▶</button>
+        `;
+      } else {
+        inner += `<div style="text-align:center;font-size:16px;color:#bbb;font-weight:700;padding:10px 0;">こたえを えらんでね 👆</div>`;
+      }
+
+    }
+  }
+  // ── end quiz ──
+
   app.innerHTML = inner;
 
   if (mode === 'trace') {
@@ -762,7 +1157,23 @@ function render() {
 // ═══════════════════════════════════════════════
 //  HANDLERS
 // ═══════════════════════════════════════════════
-function switchMode(m) { mode = m; render(); }
+function switchMode(m) {
+  mode = m;
+  if (m === 'quiz') {
+    quizScore = { correct: 0, total: 0 };
+    quizDone = false;
+    quizQ = null;
+  }
+  render();
+}
+
+function setQuizType(t) {
+  quizType = t;
+  quizQ = null;
+  quizAnswered = null;
+  quizChosen = -1;
+  render();
+}
 function goPrev()  { idx = (idx - 1 + 26) % 26; render(); }
 function goNext()  { idx = (idx + 1) % 26; render(); }
 function goTo(i)   { idx = i; render(); }
