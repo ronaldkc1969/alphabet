@@ -1,0 +1,785 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>✨ アルファベット れんしゅう</title>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;900&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Nunito', sans-serif;
+      background: linear-gradient(160deg, #a18cd1 0%, #fbc2eb 100%);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      padding: 16px;
+    }
+
+    .app {
+      background: white;
+      border-radius: 28px;
+      padding: 20px;
+      max-width: 500px;
+      width: 100%;
+      box-shadow: 0 24px 64px rgba(0,0,0,0.18);
+      margin-bottom: 24px;
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 18px;
+    }
+
+    .header h1 {
+      font-size: 26px;
+      font-weight: 900;
+      background: linear-gradient(135deg, #667eea, #f093fb);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      letter-spacing: 1px;
+    }
+
+    .stars-bar {
+      font-size: 22px;
+      margin-top: 4px;
+      min-height: 28px;
+      letter-spacing: 2px;
+    }
+
+    /* ── Tabs ── */
+    .tabs {
+      display: flex;
+      gap: 6px;
+      background: #f2f2f7;
+      border-radius: 18px;
+      padding: 4px;
+      margin-bottom: 20px;
+    }
+
+    .tab {
+      flex: 1;
+      border: none;
+      border-radius: 14px;
+      padding: 12px 0;
+      font-family: 'Nunito', sans-serif;
+      font-size: 17px;
+      font-weight: 700;
+      cursor: pointer;
+      background: transparent;
+      color: #888;
+      transition: all 0.2s;
+    }
+
+    .tab.active {
+      background: white;
+      color: #667eea;
+      box-shadow: 0 2px 8px rgba(102,126,234,0.15);
+    }
+
+    /* ── Progress bar ── */
+    .progress-wrap {
+      background: #ececec;
+      border-radius: 10px;
+      height: 10px;
+      margin-bottom: 16px;
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%;
+      border-radius: 10px;
+      background: linear-gradient(90deg, #667eea, #f093fb);
+      transition: width 0.4s ease;
+    }
+
+    /* ── Flashcard ── */
+    .flashcard {
+      border-radius: 24px;
+      padding: 28px 20px;
+      text-align: center;
+      margin-bottom: 16px;
+      cursor: pointer;
+      transition: transform 0.12s;
+      position: relative;
+      min-height: 240px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .flashcard:active { transform: scale(0.97); }
+
+    .card-upper {
+      font-size: 96px;
+      font-weight: 900;
+      color: white;
+      line-height: 1;
+      text-shadow: 0 4px 12px rgba(0,0,0,0.18);
+    }
+
+    .card-lower {
+      font-size: 56px;
+      font-weight: 700;
+      color: rgba(255,255,255,0.82);
+      margin-top: 4px;
+    }
+
+    .card-emoji { font-size: 56px; margin-top: 10px; }
+
+    .card-word {
+      font-size: 26px;
+      font-weight: 700;
+      color: white;
+      margin-top: 6px;
+      letter-spacing: 3px;
+      text-shadow: 0 2px 6px rgba(0,0,0,0.15);
+    }
+
+    .tap-hint {
+      font-size: 13px;
+      color: rgba(255,255,255,0.7);
+      margin-top: 10px;
+    }
+
+    /* ── Nav row ── */
+    .nav-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 14px;
+      gap: 10px;
+    }
+
+    .nav-btn {
+      background: #667eea;
+      color: white;
+      border: none;
+      border-radius: 50%;
+      width: 54px;
+      height: 54px;
+      font-size: 22px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: transform 0.1s, opacity 0.2s;
+      flex-shrink: 0;
+    }
+
+    .nav-btn:active { transform: scale(0.9); }
+    .nav-btn:disabled { opacity: 0.3; }
+
+    .letter-counter {
+      font-size: 18px;
+      font-weight: 700;
+      color: #444;
+      text-align: center;
+      flex: 1;
+    }
+
+    /* ── Sound buttons ── */
+    .btn-row {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+
+    .sound-btn {
+      flex: 1;
+      border: none;
+      border-radius: 16px;
+      padding: 14px 10px;
+      font-size: 17px;
+      font-weight: 700;
+      font-family: 'Nunito', sans-serif;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: transform 0.1s;
+    }
+
+    .sound-btn:active { transform: scale(0.96); }
+
+    .btn-letter {
+      background: linear-gradient(135deg, #43e97b, #38f9d7);
+      color: white;
+    }
+
+    .btn-word {
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      color: white;
+    }
+
+    /* ── Case toggle ── */
+    .case-toggle {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 14px;
+    }
+
+    .case-btn {
+      flex: 1;
+      border: 2.5px solid #ddd;
+      border-radius: 14px;
+      padding: 10px 0;
+      font-size: 15px;
+      font-weight: 700;
+      font-family: 'Nunito', sans-serif;
+      cursor: pointer;
+      background: white;
+      color: #888;
+      transition: all 0.2s;
+    }
+
+    .case-btn.active {
+      border-color: #667eea;
+      background: #667eea;
+      color: white;
+    }
+
+    /* ── Letter grid ── */
+    .grid-title {
+      font-size: 16px;
+      font-weight: 700;
+      color: #aaa;
+      text-align: center;
+      margin-bottom: 8px;
+    }
+
+    .letter-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 5px;
+    }
+
+    .grid-btn {
+      border: none;
+      border-radius: 10px;
+      padding: 9px 0;
+      font-size: 17px;
+      font-weight: 700;
+      font-family: 'Nunito', sans-serif;
+      cursor: pointer;
+      background: #f2f2f7;
+      color: #444;
+      transition: all 0.15s;
+    }
+
+    .grid-btn.active {
+      color: white;
+    }
+
+    .grid-btn:active { transform: scale(0.88); }
+
+    /* ── Tracing mode ── */
+    .trace-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .trace-letter-display {
+      font-size: 64px;
+      font-weight: 900;
+      text-align: center;
+      margin-bottom: 8px;
+      line-height: 1;
+    }
+
+    .trace-word-hint {
+      font-size: 16px;
+      color: #888;
+      margin-bottom: 14px;
+      text-align: center;
+    }
+
+    #traceCanvas {
+      border: 3px solid #e8e8f0;
+      border-radius: 20px;
+      touch-action: none;
+      cursor: crosshair;
+      display: block;
+      max-width: 100%;
+      background: #FAFBFF;
+    }
+
+    .trace-controls {
+      display: flex;
+      gap: 10px;
+      margin-top: 14px;
+      width: 100%;
+    }
+
+    .btn-clear {
+      flex: 1;
+      border: none;
+      border-radius: 16px;
+      padding: 14px;
+      font-size: 18px;
+      font-weight: 700;
+      font-family: 'Nunito', sans-serif;
+      background: #ff6b6b;
+      color: white;
+      cursor: pointer;
+      transition: transform 0.1s;
+    }
+
+    .btn-clear:active { transform: scale(0.95); }
+
+    .btn-done {
+      flex: 1;
+      border: none;
+      border-radius: 16px;
+      padding: 14px;
+      font-size: 18px;
+      font-weight: 700;
+      font-family: 'Nunito', sans-serif;
+      background: linear-gradient(135deg, #f7971e, #ffd200);
+      color: white;
+      cursor: pointer;
+      transition: transform 0.1s;
+    }
+
+    .btn-done:active { transform: scale(0.95); }
+
+    .trace-hint {
+      font-size: 14px;
+      color: #bbb;
+      text-align: center;
+      margin-top: 12px;
+    }
+
+    /* ── Feedback overlay ── */
+    .overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.35);
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .feedback-box {
+      background: white;
+      border-radius: 28px;
+      padding: 36px 40px;
+      text-align: center;
+      box-shadow: 0 24px 60px rgba(0,0,0,0.25);
+      animation: popIn 0.3s cubic-bezier(0.34,1.56,0.64,1);
+    }
+
+    @keyframes popIn {
+      from { transform: scale(0.4); opacity: 0; }
+      to   { transform: scale(1);   opacity: 1; }
+    }
+
+    .feedback-emoji { font-size: 72px; }
+
+    .feedback-text {
+      font-size: 32px;
+      font-weight: 900;
+      color: #333;
+      margin-top: 10px;
+    }
+
+    .feedback-sub {
+      font-size: 18px;
+      color: #888;
+      margin-top: 6px;
+    }
+
+    /* ── Confetti particle ── */
+    .confetti-particle {
+      position: fixed;
+      width: 10px;
+      height: 10px;
+      border-radius: 2px;
+      pointer-events: none;
+      z-index: 200;
+      animation: confettiFall linear forwards;
+    }
+
+    @keyframes confettiFall {
+      0%   { transform: translateY(-20px) rotate(0deg); opacity: 1; }
+      100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
+    }
+  </style>
+</head>
+<body>
+<div class="app" id="app"></div>
+
+<script>
+// ═══════════════════════════════════════════════
+//  DATA
+// ═══════════════════════════════════════════════
+const LETTERS = [
+  { u:'A', l:'a', word:'Apple',      emoji:'🍎', color:'#FF6B6B', dark:'#E85555' },
+  { u:'B', l:'b', word:'Ball',       emoji:'⚽', color:'#FF9F43', dark:'#E88A30' },
+  { u:'C', l:'c', word:'Cat',        emoji:'🐱', color:'#FECA57', dark:'#E0B340' },
+  { u:'D', l:'d', word:'Dog',        emoji:'🐶', color:'#1DD1A1', dark:'#18B88C' },
+  { u:'E', l:'e', word:'Egg',        emoji:'🥚', color:'#48CAE4', dark:'#38B4CE' },
+  { u:'F', l:'f', word:'Fish',       emoji:'🐟', color:'#667EEA', dark:'#556CD9' },
+  { u:'G', l:'g', word:'Grape',      emoji:'🍇', color:'#A55EEA', dark:'#9450D9' },
+  { u:'H', l:'h', word:'Hat',        emoji:'🎩', color:'#FC5C65', dark:'#E84B54' },
+  { u:'I', l:'i', word:'Ice cream',  emoji:'🍦', color:'#FD9644', dark:'#EC8533' },
+  { u:'J', l:'j', word:'Juice',      emoji:'🧃', color:'#26D0CE', dark:'#1ABFBD' },
+  { u:'K', l:'k', word:'Kite',       emoji:'🪁', color:'#F7B731', dark:'#E0A220' },
+  { u:'L', l:'l', word:'Lion',       emoji:'🦁', color:'#20BF6B', dark:'#18A85A' },
+  { u:'M', l:'m', word:'Moon',       emoji:'🌙', color:'#3867D6', dark:'#2A55C4' },
+  { u:'N', l:'n', word:'Nose',       emoji:'👃', color:'#EB3B5A', dark:'#D42A49' },
+  { u:'O', l:'o', word:'Orange',     emoji:'🍊', color:'#FA8231', dark:'#E97120' },
+  { u:'P', l:'p', word:'Pizza',      emoji:'🍕', color:'#2BCBBA', dark:'#1ABAA9' },
+  { u:'Q', l:'q', word:'Queen',      emoji:'👸', color:'#8854D0', dark:'#7743BE' },
+  { u:'R', l:'r', word:'Rainbow',    emoji:'🌈', color:'#4B7BEC', dark:'#3A6ADB' },
+  { u:'S', l:'s', word:'Star',       emoji:'⭐', color:'#0FB9B1', dark:'#0AA8A0' },
+  { u:'T', l:'t', word:'Tiger',      emoji:'🐯', color:'#F7B731', dark:'#E0A220' },
+  { u:'U', l:'u', word:'Umbrella',   emoji:'☂️',  color:'#A55EEA', dark:'#954FD9' },
+  { u:'V', l:'v', word:'Violin',     emoji:'🎻', color:'#FC5C65', dark:'#E84B54' },
+  { u:'W', l:'w', word:'Watermelon', emoji:'🍉', color:'#26C281', dark:'#1AAF70' },
+  { u:'X', l:'x', word:'Xylophone',  emoji:'🎵', color:'#FD9644', dark:'#EC8533' },
+  { u:'Y', l:'y', word:'Yogurt',     emoji:'🥛', color:'#45AAF2', dark:'#34A0E0' },
+  { u:'Z', l:'z', word:'Zebra',      emoji:'🦓', color:'#778CA3', dark:'#667B92' },
+];
+
+const PHONICS = {
+  A:'ay',B:'bee',C:'see',D:'dee',E:'ee',F:'ef',G:'jee',H:'aitch',I:'eye',J:'jay',
+  K:'kay',L:'el',M:'em',N:'en',O:'oh',P:'pee',Q:'cue',R:'ar',S:'ess',T:'tee',
+  U:'you',V:'vee',W:'double you',X:'ex',Y:'why',Z:'zee'
+};
+
+const PRAISE = [
+  { e:'🌟', t:'すごい！',   s:'Great job!' },
+  { e:'✨', t:'やったね！', s:'Amazing!' },
+  { e:'🎉', t:'かんぺき！', s:'Perfect!' },
+  { e:'💪', t:'よくできた！', s:'Excellent!' },
+  { e:'⭐', t:'さいこう！', s:'Wonderful!' },
+  { e:'🏆', t:'チャンピオン！', s:'Champion!' },
+];
+
+// ═══════════════════════════════════════════════
+//  STATE
+// ═══════════════════════════════════════════════
+let mode       = 'card';   // 'card' | 'trace'
+let idx        = 0;
+let showCase   = 'both';   // 'upper' | 'lower' | 'both'
+let traceCase  = 'upper';
+let totalStars = 0;
+let isDrawing  = false;
+let canvas, ctx;
+
+// ═══════════════════════════════════════════════
+//  SPEECH
+// ═══════════════════════════════════════════════
+function speak(text, rate=0.82) {
+  if (!window.speechSynthesis) return;
+  window.speechSynthesis.cancel();
+  const u = new SpeechSynthesisUtterance(text);
+  u.lang = 'en-US'; u.rate = rate; u.pitch = 1.1;
+  window.speechSynthesis.speak(u);
+}
+
+function speakLetter(upper) { speak(PHONICS[upper], 0.75); }
+function speakWord(word) { speak(word, 0.78); }
+
+// ═══════════════════════════════════════════════
+//  CONFETTI
+// ═══════════════════════════════════════════════
+function launchConfetti() {
+  const colors = ['#FF6B6B','#FECA57','#48CAE4','#1DD1A1','#A55EEA','#FD9644','#667EEA'];
+  for (let i = 0; i < 48; i++) {
+    const el = document.createElement('div');
+    el.className = 'confetti-particle';
+    el.style.cssText = `
+      left: ${Math.random()*100}vw;
+      top: -12px;
+      background: ${colors[Math.floor(Math.random()*colors.length)]};
+      width: ${6+Math.random()*8}px;
+      height: ${6+Math.random()*8}px;
+      animation-duration: ${1.2+Math.random()*1.4}s;
+      animation-delay: ${Math.random()*0.5}s;
+      border-radius: ${Math.random()>0.5?'50%':'3px'};
+    `;
+    document.body.appendChild(el);
+    setTimeout(() => el.remove(), 2800);
+  }
+}
+
+// ═══════════════════════════════════════════════
+//  FEEDBACK
+// ═══════════════════════════════════════════════
+function celebrate() {
+  totalStars++;
+  const p = PRAISE[Math.floor(Math.random()*PRAISE.length)];
+  launchConfetti();
+  speak(p.s, 0.9);
+
+  const ov = document.createElement('div');
+  ov.className = 'overlay';
+  ov.innerHTML = `
+    <div class="feedback-box">
+      <div class="feedback-emoji">${p.e}</div>
+      <div class="feedback-text">${p.t}</div>
+      <div class="feedback-sub">⭐ ×${totalStars}</div>
+    </div>`;
+  ov.addEventListener('click', () => ov.remove());
+  document.body.appendChild(ov);
+  setTimeout(() => ov.remove(), 2400);
+
+  render();
+}
+
+// ═══════════════════════════════════════════════
+//  CANVAS / TRACING
+// ═══════════════════════════════════════════════
+function initCanvas() {
+  canvas = document.getElementById('traceCanvas');
+  if (!canvas) return;
+  const size = Math.min(window.innerWidth - 72, 340);
+  canvas.width = size;
+  canvas.height = size;
+  ctx = canvas.getContext('2d');
+  drawGuide();
+  bindCanvasEvents();
+}
+
+function drawGuide() {
+  if (!ctx) return;
+  const L = LETTERS[idx];
+  const displayLetter = traceCase === 'lower' ? L.l : L.u;
+  const size = canvas.width;
+
+  ctx.clearRect(0, 0, size, size);
+  ctx.fillStyle = '#FAFBFF';
+  ctx.fillRect(0, 0, size, size);
+
+  // dashed baseline
+  ctx.save();
+  ctx.strokeStyle = '#D8D8F0';
+  ctx.lineWidth = 1.5;
+  ctx.setLineDash([7, 7]);
+  ctx.beginPath();
+  ctx.moveTo(16, size * 0.72);
+  ctx.lineTo(size - 16, size * 0.72);
+  ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.restore();
+
+  // Ghost letter
+  ctx.font = `900 ${size * 0.68}px 'Nunito', sans-serif`;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillStyle = 'rgba(160,150,230,0.18)';
+  ctx.fillText(displayLetter, size / 2, size * 0.48);
+
+  // Dotted outline
+  ctx.strokeStyle = 'rgba(100,100,200,0.25)';
+  ctx.lineWidth = 2.5;
+  ctx.setLineDash([5, 5]);
+  ctx.strokeText(displayLetter, size / 2, size * 0.48);
+  ctx.setLineDash([]);
+}
+
+function bindCanvasEvents() {
+  if (!canvas) return;
+
+  const getPos = (e) => {
+    const r = canvas.getBoundingClientRect();
+    const sx = canvas.width  / r.width;
+    const sy = canvas.height / r.height;
+    return { x: (e.clientX - r.left)*sx, y: (e.clientY - r.top)*sy };
+  };
+
+  const beginStroke = (x, y) => {
+    isDrawing = true;
+    ctx.beginPath();
+    ctx.moveTo(x, y);
+    ctx.strokeStyle = LETTERS[idx].color;
+    ctx.lineWidth   = 18;
+    ctx.lineCap     = 'round';
+    ctx.lineJoin    = 'round';
+    ctx.globalAlpha = 0.92;
+  };
+
+  const continueStroke = (x, y) => {
+    if (!isDrawing) return;
+    ctx.lineTo(x, y);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(x, y);
+  };
+
+  canvas.addEventListener('mousedown',  (e) => { const p=getPos(e); beginStroke(p.x, p.y); });
+  canvas.addEventListener('mousemove',  (e) => { const p=getPos(e); continueStroke(p.x, p.y); });
+  canvas.addEventListener('mouseup',    ()  => { isDrawing=false; ctx.globalAlpha=1; });
+  canvas.addEventListener('mouseleave', ()  => { isDrawing=false; ctx.globalAlpha=1; });
+
+  canvas.addEventListener('touchstart', (e) => {
+    e.preventDefault();
+    const t=e.touches[0], r=canvas.getBoundingClientRect();
+    const sx=canvas.width/r.width, sy=canvas.height/r.height;
+    beginStroke((t.clientX-r.left)*sx, (t.clientY-r.top)*sy);
+  }, { passive:false });
+
+  canvas.addEventListener('touchmove', (e) => {
+    e.preventDefault();
+    const t=e.touches[0], r=canvas.getBoundingClientRect();
+    const sx=canvas.width/r.width, sy=canvas.height/r.height;
+    continueStroke((t.clientX-r.left)*sx, (t.clientY-r.top)*sy);
+  }, { passive:false });
+
+  canvas.addEventListener('touchend', () => { isDrawing=false; ctx.globalAlpha=1; });
+}
+
+// ═══════════════════════════════════════════════
+//  RENDER
+// ═══════════════════════════════════════════════
+function render() {
+  const L = LETTERS[idx];
+  const app = document.getElementById('app');
+
+  const starsHTML = '⭐'.repeat(Math.min(totalStars, 20));
+
+  let inner = `
+    <div class="header">
+      <h1>✏️ アルファベット れんしゅう</h1>
+      <div class="stars-bar">${starsHTML}</div>
+    </div>
+
+    <div class="tabs">
+      <button class="tab ${mode==='card'?'active':''}"  onclick="switchMode('card')">📇 カード</button>
+      <button class="tab ${mode==='trace'?'active':''}" onclick="switchMode('trace')">✏️ なぞり書き</button>
+    </div>
+
+    <div class="progress-wrap">
+      <div class="progress-fill" style="width:${(idx+1)/26*100}%"></div>
+    </div>
+  `;
+
+  if (mode === 'card') {
+    const displayUpper = L.u;
+    const displayLower = L.l;
+    let letterHTML = '';
+    if (showCase === 'upper') {
+      letterHTML = `<div class="card-upper">${displayUpper}</div>`;
+    } else if (showCase === 'lower') {
+      letterHTML = `<div class="card-upper">${displayLower}</div>`;
+    } else {
+      letterHTML = `<div class="card-upper">${displayUpper}</div><div class="card-lower">${displayLower}</div>`;
+    }
+
+    inner += `
+      <div class="flashcard"
+           style="background: linear-gradient(145deg, ${L.color}, ${L.dark});"
+           onclick="speakLetter('${L.u}')">
+        ${letterHTML}
+        <div class="card-emoji">${L.emoji}</div>
+        <div class="card-word">${L.word}</div>
+        <div class="tap-hint">👆 タップして おとをきく</div>
+      </div>
+
+      <div class="nav-row">
+        <button class="nav-btn" onclick="goPrev()">◀</button>
+        <div class="letter-counter">${idx+1} / 26</div>
+        <button class="nav-btn" onclick="goNext()">▶</button>
+      </div>
+
+      <div class="btn-row">
+        <button class="sound-btn btn-letter" onclick="speakLetter('${L.u}')">
+          🔊 もじの おと
+        </button>
+        <button class="sound-btn btn-word" onclick="speakWord('${L.word}')">
+          🔊 ことばを きく
+        </button>
+      </div>
+
+      <div class="case-toggle">
+        <button class="case-btn ${showCase==='upper'?'active':''}" onclick="setCase('upper')">大文字 ABC</button>
+        <button class="case-btn ${showCase==='lower'?'active':''}" onclick="setCase('lower')">小文字 abc</button>
+        <button class="case-btn ${showCase==='both'?'active':''}"  onclick="setCase('both')">りょうほう</button>
+      </div>
+
+      <div class="grid-title">えらんでね</div>
+      <div class="letter-grid">
+        ${LETTERS.map((lt,i)=>`
+          <button class="grid-btn ${i===idx?'active':''}"
+                  style="${i===idx?`background:${lt.color};`:''}"
+                  onclick="goTo(${i})">${lt.u}</button>
+        `).join('')}
+      </div>
+    `;
+
+  } else {
+    // ── TRACE MODE ──
+    const displayLetter = traceCase === 'lower' ? L.l : L.u;
+
+    inner += `
+      <div class="trace-container">
+        <div class="nav-row" style="width:100%">
+          <button class="nav-btn" onclick="tracePrev()">◀</button>
+          <div class="trace-letter-display" style="color:${L.color};">${displayLetter}</div>
+          <button class="nav-btn" onclick="traceNext()">▶</button>
+        </div>
+
+        <div class="trace-word-hint">${L.emoji} ${L.word}</div>
+
+        <div class="case-toggle" style="width:100%;margin-bottom:14px;">
+          <button class="case-btn ${traceCase==='upper'?'active':''}" onclick="setTraceCase('upper')">大文字 ${L.u}</button>
+          <button class="case-btn ${traceCase==='lower'?'active':''}" onclick="setTraceCase('lower')">小文字 ${L.l}</button>
+        </div>
+
+        <canvas id="traceCanvas"></canvas>
+
+        <div class="trace-controls">
+          <button class="btn-clear" onclick="clearTrace()">🔄 やりなおし</button>
+          <button class="btn-done"  onclick="celebrate()">⭐ できた！</button>
+        </div>
+
+        <div class="btn-row" style="margin-top:12px;width:100%;">
+          <button class="sound-btn btn-letter" onclick="speakLetter('${L.u}')">🔊 おとをきく</button>
+          <button class="sound-btn btn-word"   onclick="speakWord('${L.word}')">🔊 ことば</button>
+        </div>
+
+        <div class="trace-hint">うすい もじを なぞってみよう ✏️<br>ゆびでも OK！</div>
+      </div>
+    `;
+  }
+
+  app.innerHTML = inner;
+
+  if (mode === 'trace') {
+    requestAnimationFrame(initCanvas);
+  }
+}
+
+// ═══════════════════════════════════════════════
+//  HANDLERS
+// ═══════════════════════════════════════════════
+function switchMode(m) { mode = m; render(); }
+function goPrev()  { idx = (idx - 1 + 26) % 26; render(); }
+function goNext()  { idx = (idx + 1) % 26; render(); }
+function goTo(i)   { idx = i; render(); }
+function setCase(c){ showCase = c; render(); }
+
+function tracePrev() { idx = (idx - 1 + 26) % 26; render(); }
+function traceNext() { idx = (idx + 1) % 26; render(); }
+function setTraceCase(c) { traceCase = c; render(); }
+
+function clearTrace() {
+  if (ctx) { ctx.globalAlpha = 1; drawGuide(); }
+}
+
+// ═══════════════════════════════════════════════
+//  BOOT
+// ═══════════════════════════════════════════════
+render();
+</script>
+</body>
+</html>
