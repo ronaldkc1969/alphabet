@@ -602,6 +602,73 @@
       cursor: pointer;
       margin-bottom: 10px;
     }
+
+    /* ── Write quiz ── */
+    #writeCanvas {
+      border: 3px solid #e8e8f0;
+      border-radius: 20px;
+      touch-action: none;
+      cursor: crosshair;
+      display: block;
+      max-width: 100%;
+      background: #FAFBFF;
+    }
+
+    .write-btns {
+      display: flex;
+      gap: 8px;
+      margin-top: 12px;
+      width: 100%;
+    }
+
+    .btn-hint {
+      flex: 1;
+      border: none;
+      border-radius: 16px;
+      padding: 14px;
+      font-size: 17px;
+      font-weight: 700;
+      font-family: 'Nunito', sans-serif;
+      background: linear-gradient(135deg, #f7971e, #ffd200);
+      color: white;
+      cursor: pointer;
+      transition: transform 0.1s;
+    }
+
+    .btn-hint:active { transform: scale(0.95); }
+    .btn-hint.shown  { background: #e0e0e0; color: #888; }
+
+    .btn-write-ok {
+      flex: 1;
+      border: none;
+      border-radius: 16px;
+      padding: 14px;
+      font-size: 17px;
+      font-weight: 700;
+      font-family: 'Nunito', sans-serif;
+      background: linear-gradient(135deg, #1DD1A1, #26C281);
+      color: white;
+      cursor: pointer;
+      transition: transform 0.1s;
+    }
+
+    .btn-write-ok:active { transform: scale(0.95); }
+
+    .btn-write-hard {
+      flex: 1;
+      border: none;
+      border-radius: 16px;
+      padding: 14px;
+      font-size: 17px;
+      font-weight: 700;
+      font-family: 'Nunito', sans-serif;
+      background: #f2f2f7;
+      color: #888;
+      cursor: pointer;
+      transition: transform 0.1s;
+    }
+
+    .btn-write-hard:active { transform: scale(0.95); }
   </style>
 </head>
 <body>
@@ -667,13 +734,18 @@ let isDrawing  = false;
 let canvas, ctx;
 
 // ── Quiz state ──
-let quizType     = 'letter';  // 'letter' | 'emoji' | 'sound'
+let quizType     = 'letter';  // 'letter' | 'emoji' | 'sound' | 'write'
 let quizQ        = null;      // current question
 let quizScore    = { correct: 0, total: 0 };
 let quizAnswered = null;      // null | 'correct' | 'wrong'
 let quizChosen   = -1;
 let quizDone     = false;
 const QUIZ_MAX   = 10;
+
+// ── Write-quiz state ──
+let writeHintShown = false;
+let writeCanvas, writeCtx;
+let writeIsDrawing = false;
 
 // ═══════════════════════════════════════════════
 //  SPEECH
@@ -863,8 +935,7 @@ function generateQuestion() {
   quizQ = { answerIdx, choices };
   quizAnswered = null;
   quizChosen = -1;
-  if (quizType === 'sound') {
-    // auto-play the sound after a short delay
+  if (quizType === 'sound' || quizType === 'write') {
     setTimeout(() => speakLetter(LETTERS[answerIdx].u), 400);
   }
 }
@@ -872,6 +943,9 @@ function generateQuestion() {
 function startQuiz() {
   quizScore = { correct: 0, total: 0 };
   quizDone = false;
+  quizAnswered = null;
+  quizChosen = -1;
+  writeHintShown = false;
   generateQuestion();
   render();
 }
@@ -914,126 +988,36 @@ function nextQuizQuestion() {
 function render() {
   const L = LETTERS[idx];
   const app = document.getElementById('app');
-
   const starsHTML = '⭐'.repeat(Math.min(totalStars, 20));
+  let inner = '';
 
-  let inner = `
-    <div class="header">
-      <h1>✏️ アルファベット れんしゅう</h1>
-      <div class="stars-bar">${starsHTML}</div>
-    </div>
-
-    <div class="tabs">
-      <button class="tab ${mode==='card'?'active':''}"  onclick="switchMode('card')">📇 カード</button>
-      <button class="tab ${mode==='trace'?'active':''}" onclick="switchMode('trace')">✏️ なぞり書き</button>
-      <button class="tab ${mode==='quiz'?'active':''}"  onclick="switchMode('quiz')">🎯 テスト</button>
-    </div>
-
-    <div class="progress-wrap">
-      <div class="progress-fill" style="width:${mode==='quiz' ? (quizScore.total/QUIZ_MAX*100) : (idx+1)/26*100}%"></div>
-    </div>
-  `;
-
-  if (mode === 'card') {
-    const displayUpper = L.u;
-    const displayLower = L.l;
-    let letterHTML = '';
-    if (showCase === 'upper') {
-      letterHTML = `<div class="card-upper">${displayUpper}</div>`;
-    } else if (showCase === 'lower') {
-      letterHTML = `<div class="card-upper">${displayLower}</div>`;
-    } else {
-      letterHTML = `<div class="card-upper">${displayUpper}</div><div class="card-lower">${displayLower}</div>`;
-    }
-
-    inner += `
-      <div class="flashcard"
-           style="background: linear-gradient(145deg, ${L.color}, ${L.dark});"
-           onclick="speakLetter('${L.u}')">
-        ${letterHTML}
-        <div class="card-emoji">${L.emoji}</div>
-        <div class="card-word">${L.word}</div>
-        <div class="tap-hint">👆 タップして おとをきく</div>
-      </div>
-
-      <div class="nav-row">
-        <button class="nav-btn" onclick="goPrev()">◀</button>
-        <div class="letter-counter">${idx+1} / 26</div>
-        <button class="nav-btn" onclick="goNext()">▶</button>
-      </div>
-
-      <div class="btn-row">
-        <button class="sound-btn btn-letter" onclick="speakLetter('${L.u}')">
-          🔊 もじの おと
-        </button>
-        <button class="sound-btn btn-word" onclick="speakWord('${L.word}')">
-          🔊 ことばを きく
-        </button>
-      </div>
-
-      <div class="case-toggle">
-        <button class="case-btn ${showCase==='upper'?'active':''}" onclick="setCase('upper')">大文字 ABC</button>
-        <button class="case-btn ${showCase==='lower'?'active':''}" onclick="setCase('lower')">小文字 abc</button>
-        <button class="case-btn ${showCase==='both'?'active':''}"  onclick="setCase('both')">りょうほう</button>
-      </div>
-
-      <div class="grid-title">えらんでね</div>
-      <div class="letter-grid">
-        ${LETTERS.map((lt,i)=>`
-          <button class="grid-btn ${i===idx?'active':''}"
-                  style="${i===idx?`background:${lt.color};`:''}"
-                  onclick="goTo(${i})">${lt.u}</button>
-        `).join('')}
-      </div>
-    `;
-
-  } else {
-    // ── TRACE MODE ──
-    const displayLetter = traceCase === 'lower' ? L.l : L.u;
-
-    inner += `
-      <div class="trace-container">
-        <div class="nav-row" style="width:100%">
-          <button class="nav-btn" onclick="tracePrev()">◀</button>
-          <div class="trace-letter-display" style="color:${L.color};">${displayLetter}</div>
-          <button class="nav-btn" onclick="traceNext()">▶</button>
-        </div>
-
-        <div class="trace-word-hint">${L.emoji} ${L.word}</div>
-
-        <div class="case-toggle" style="width:100%;margin-bottom:14px;">
-          <button class="case-btn ${traceCase==='upper'?'active':''}" onclick="setTraceCase('upper')">大文字 ${L.u}</button>
-          <button class="case-btn ${traceCase==='lower'?'active':''}" onclick="setTraceCase('lower')">小文字 ${L.l}</button>
-        </div>
-
-        <canvas id="traceCanvas"></canvas>
-
-        <div class="trace-controls">
-          <button class="btn-clear" onclick="clearTrace()">🔄 やりなおし</button>
-          <button class="btn-done"  onclick="celebrate()">⭐ できた！</button>
-        </div>
-
-        <div class="btn-row" style="margin-top:12px;width:100%;">
-          <button class="sound-btn btn-letter" onclick="speakLetter('${L.u}')">🔊 おとをきく</button>
-          <button class="sound-btn btn-word"   onclick="speakWord('${L.word}')">🔊 ことば</button>
-        </div>
-
-        <div class="trace-hint">うすい もじを なぞってみよう ✏️<br>ゆびでも OK！</div>
-      </div>
-    `;
-  }
-
-  // ── QUIZ MODE render ──
+  // ════════════════════════════════
+  //  QUIZ MODE — with header/tabs
+  // ════════════════════════════════
   if (mode === 'quiz') {
+
+    inner = `
+      <div class="header">
+        <h1>✏️ アルファベット れんしゅう</h1>
+        <div class="stars-bar">${starsHTML}</div>
+      </div>
+      <div class="tabs">
+        <button class="tab" onclick="switchMode('card')">📇 カード</button>
+        <button class="tab" onclick="switchMode('trace')">✏️ なぞり書き</button>
+        <button class="tab active" onclick="switchMode('quiz')">🎯 テスト</button>
+      </div>
+      <div class="progress-wrap">
+        <div class="progress-fill" style="width:${quizScore.total/QUIZ_MAX*100}%"></div>
+      </div>
+    `;
 
     if (quizDone) {
       // ── Result screen ──
       const pct = quizScore.correct / QUIZ_MAX;
-      let trophy = '🥇', msg = 'かんぺき！';
-      if (pct < 0.4)       { trophy = '💪'; msg = 'もっとれんしゅう！'; }
-      else if (pct < 0.7)  { trophy = '🥈'; msg = 'よくがんばった！'; }
-      else if (pct < 1.0)  { trophy = '🥇'; msg = 'すごい！'; }
-      else                 { trophy = '🏆'; msg = 'パーフェクト！！'; }
+      let trophy = '💪', msg = 'もっとれんしゅう！';
+      if (pct >= 1.0)      { trophy = '🏆'; msg = 'パーフェクト！！'; }
+      else if (pct >= 0.7) { trophy = '🥇'; msg = 'すごい！'; }
+      else if (pct >= 0.4) { trophy = '🥈'; msg = 'よくがんばった！'; }
 
       inner += `
         <div class="quiz-result">
@@ -1051,12 +1035,13 @@ function render() {
       const Q = quizQ;
       const ansL = LETTERS[Q.answerIdx];
 
-      // ── Quiz type selector ──
+      // ── Quiz type selector (4 types) ──
       inner += `
         <div class="quiz-type-row">
           <button class="qtype-btn ${quizType==='letter'?'active':''}" onclick="setQuizType('letter')">🔤<br>もじを<br>えらぼう</button>
           <button class="qtype-btn ${quizType==='emoji'?'active':''}"  onclick="setQuizType('emoji')">🖼️<br>えもじを<br>えらぼう</button>
           <button class="qtype-btn ${quizType==='sound'?'active':''}"  onclick="setQuizType('sound')">🔊<br>おとで<br>えらぼう</button>
+          <button class="qtype-btn ${quizType==='write'?'active':''}"  onclick="setQuizType('write')">✏️<br>おとを<br>きいてかこう</button>
         </div>
       `;
 
@@ -1080,78 +1065,215 @@ function render() {
         </div>
       `;
 
-      // ── Question box ──
-      let qBoxContent = '';
-      if (quizType === 'letter') {
-        qBoxContent = `
-          <div class="quiz-question-label">この えもじは どの もじ？</div>
-          <div class="quiz-q-emoji">${ansL.emoji}</div>
-          <div class="quiz-q-word">${ansL.word}</div>
-        `;
-      } else if (quizType === 'emoji') {
-        qBoxContent = `
-          <div class="quiz-question-label">この もじは どの えもじ？</div>
-          <div class="quiz-q-letter">${ansL.u}</div>
-          <div style="font-size:18px;font-weight:700;color:rgba(255,255,255,0.6);margin-top:4px;">${ansL.l}</div>
-        `;
-      } else {
-        // sound
-        qBoxContent = `
-          <div class="quiz-question-label">おとを きいて もじを えらぼう！</div>
-          <div class="quiz-sound-icon" onclick="speakLetter('${ansL.u}')">🔊</div>
-          <div style="font-size:14px;color:rgba(255,255,255,0.65);margin-top:8px;font-weight:700;">↑ タップして もういちど きく</div>
-        `;
-      }
+      // ════════════════════════════════
+      //  WRITE QUIZ
+      // ════════════════════════════════
+      if (quizType === 'write') {
 
-      inner += `<div class="quiz-question-box">${qBoxContent}</div>`;
-
-      // ── Choices ──
-      inner += `<div class="quiz-choices">`;
-      Q.choices.forEach(ci => {
-        const CL = LETTERS[ci];
-        let btnClass = 'quiz-choice-btn';
-        if (quizAnswered !== null) {
-          if (ci === Q.answerIdx) btnClass += ' reveal';
-          if (ci === quizChosen && quizAnswered === 'wrong') btnClass += ' wrong';
-        }
-
-        let btnContent = '';
-        if (quizType === 'letter') {
-          btnContent = `${CL.u}<div class="quiz-choice-sub">${CL.l}</div>`;
-        } else if (quizType === 'emoji') {
-          btnContent = `${CL.emoji}<div class="quiz-choice-sub">${CL.word}</div>`;
-        } else {
-          btnContent = `${CL.u}<div class="quiz-choice-sub">${CL.l}</div>`;
-        }
-
-        const disabled = quizAnswered !== null ? 'style="cursor:default;"' : '';
-        inner += `<button class="${btnClass}" onclick="answerQuiz(${ci})" ${disabled}>${btnContent}</button>`;
-      });
-      inner += `</div>`;
-
-      // ── Feedback / Next button ──
-      if (quizAnswered === 'correct') {
-        inner += `<button class="quiz-next-btn" onclick="nextQuizQuestion()">つぎの もんだい ▶</button>`;
-      } else if (quizAnswered === 'wrong') {
+        // Question box — sound only
         inner += `
-          <div style="text-align:center;font-size:18px;font-weight:700;color:#FF6B6B;margin-bottom:10px;">
-            ざんねん… こたえは「${ansL.u}」だよ！ ${ansL.emoji}
+          <div class="quiz-question-box">
+            <div class="quiz-question-label">おとを きいて もじを かこう！</div>
+            <div class="quiz-sound-icon" onclick="speakLetter('${ansL.u}')">🔊</div>
+            <div style="font-size:14px;color:rgba(255,255,255,0.65);margin-top:8px;font-weight:700;">↑ タップして もういちど きく</div>
           </div>
-          <button class="quiz-next-btn" onclick="nextQuizQuestion()">つぎの もんだい ▶</button>
         `;
-      } else {
-        inner += `<div style="text-align:center;font-size:16px;color:#bbb;font-weight:700;padding:10px 0;">こたえを えらんでね 👆</div>`;
-      }
 
+        if (quizAnswered !== null) {
+          // ── After self-assessment: show answer + next ──
+          const isOk = quizAnswered === 'correct';
+          inner += `
+            <div style="text-align:center;padding:14px 0 6px;">
+              <div style="font-size:64px;font-weight:900;color:${ansL.color};">${ansL.u}</div>
+              <div style="font-size:22px;color:#555;font-weight:700;">${ansL.l} &nbsp; ${ansL.emoji} ${ansL.word}</div>
+            </div>
+            <div style="text-align:center;font-size:18px;font-weight:700;color:${isOk?'#1DD1A1':'#FF6B6B'};margin:8px 0 12px;">
+              ${isOk ? '✨ よくできた！' : '😊 また れんしゅうしよう！'}
+            </div>
+            <button class="quiz-next-btn" onclick="nextQuizQuestion()">つぎの もんだい ▶</button>
+          `;
+        } else {
+          // ── Canvas + hint/done buttons ──
+          inner += `
+            <div style="display:flex;flex-direction:column;align-items:center;">
+              <canvas id="writeCanvas"></canvas>
+              <div class="write-btns">
+                <button class="btn-clear"  onclick="clearWriteCanvas()">🔄 やりなおし</button>
+                <button class="btn-hint ${writeHintShown?'shown':''}" onclick="showWriteHint()">
+                  ${writeHintShown ? '👻 ヒントちゅう' : '💡 ヒント'}
+                </button>
+              </div>
+              <div class="write-btns" style="margin-top:8px;">
+                <button class="btn-write-ok"   onclick="writeQuizResult(true)">⭐ できた！</button>
+                <button class="btn-write-hard" onclick="writeQuizResult(false)">😅 むずかしい…</button>
+              </div>
+              <div class="trace-hint" style="margin-top:10px;">
+                ${writeHintShown ? 'うすい もじを なぞってみよう ✏️' : 'おとを きいて もじを かいてみよう！'}
+              </div>
+            </div>
+          `;
+        }
+
+      } else {
+        // ════════════════════════════════
+        //  CHOICE QUIZZES (letter/emoji/sound)
+        // ════════════════════════════════
+
+        // Question box
+        let qBoxContent = '';
+        if (quizType === 'letter') {
+          qBoxContent = `
+            <div class="quiz-question-label">この えもじは どの もじ？</div>
+            <div class="quiz-q-emoji">${ansL.emoji}</div>
+            <div class="quiz-q-word">${ansL.word}</div>
+          `;
+        } else if (quizType === 'emoji') {
+          qBoxContent = `
+            <div class="quiz-question-label">この もじは どの えもじ？</div>
+            <div class="quiz-q-letter">${ansL.u}</div>
+            <div style="font-size:18px;font-weight:700;color:rgba(255,255,255,0.6);margin-top:4px;">${ansL.l}</div>
+          `;
+        } else {
+          qBoxContent = `
+            <div class="quiz-question-label">おとを きいて もじを えらぼう！</div>
+            <div class="quiz-sound-icon" onclick="speakLetter('${ansL.u}')">🔊</div>
+            <div style="font-size:14px;color:rgba(255,255,255,0.65);margin-top:8px;font-weight:700;">↑ タップして もういちど きく</div>
+          `;
+        }
+        inner += `<div class="quiz-question-box">${qBoxContent}</div>`;
+
+        // Choices grid
+        inner += `<div class="quiz-choices">`;
+        Q.choices.forEach(ci => {
+          const CL = LETTERS[ci];
+          let btnClass = 'quiz-choice-btn';
+          if (quizAnswered !== null) {
+            if (ci === Q.answerIdx) btnClass += ' reveal';
+            if (ci === quizChosen && quizAnswered === 'wrong') btnClass += ' wrong';
+          }
+          let btnContent = '';
+          if (quizType === 'letter') {
+            btnContent = `${CL.u}<div class="quiz-choice-sub">${CL.l}</div>`;
+          } else if (quizType === 'emoji') {
+            btnContent = `${CL.emoji}<div class="quiz-choice-sub">${CL.word}</div>`;
+          } else {
+            btnContent = `${CL.u}<div class="quiz-choice-sub">${CL.l}</div>`;
+          }
+          const disabled = quizAnswered !== null ? 'style="cursor:default;"' : '';
+          inner += `<button class="${btnClass}" onclick="answerQuiz(${ci})" ${disabled}>${btnContent}</button>`;
+        });
+        inner += `</div>`;
+
+        // Feedback / next
+        if (quizAnswered === 'correct') {
+          inner += `<button class="quiz-next-btn" onclick="nextQuizQuestion()">つぎの もんだい ▶</button>`;
+        } else if (quizAnswered === 'wrong') {
+          inner += `
+            <div style="text-align:center;font-size:18px;font-weight:700;color:#FF6B6B;margin-bottom:10px;">
+              ざんねん… こたえは「${ansL.u}」だよ！ ${ansL.emoji}
+            </div>
+            <button class="quiz-next-btn" onclick="nextQuizQuestion()">つぎの もんだい ▶</button>
+          `;
+        } else {
+          inner += `<div style="text-align:center;font-size:16px;color:#bbb;font-weight:700;padding:10px 0;">こたえを えらんでね 👆</div>`;
+        }
+      }
     }
+
+    app.innerHTML = inner;
+    if (quizType === 'write' && !quizDone && quizAnswered === null) {
+      requestAnimationFrame(initWriteCanvas);
+    }
+    return;
   }
-  // ── end quiz ──
+
+  // ════════════════════════════════
+  //  CARD / TRACE MODE — with header + tabs
+  // ════════════════════════════════
+  inner = `
+    <div class="header">
+      <h1>✏️ アルファベット れんしゅう</h1>
+      <div class="stars-bar">${starsHTML}</div>
+    </div>
+    <div class="tabs">
+      <button class="tab ${mode==='card'?'active':''}"  onclick="switchMode('card')">📇 カード</button>
+      <button class="tab ${mode==='trace'?'active':''}" onclick="switchMode('trace')">✏️ なぞり書き</button>
+      <button class="tab ${mode==='quiz'?'active':''}"  onclick="switchMode('quiz')">🎯 テスト</button>
+    </div>
+    <div class="progress-wrap">
+      <div class="progress-fill" style="width:${(idx+1)/26*100}%"></div>
+    </div>
+  `;
+
+  if (mode === 'card') {
+    let letterHTML = '';
+    if (showCase === 'upper')      letterHTML = `<div class="card-upper">${L.u}</div>`;
+    else if (showCase === 'lower') letterHTML = `<div class="card-upper">${L.l}</div>`;
+    else                           letterHTML = `<div class="card-upper">${L.u}</div><div class="card-lower">${L.l}</div>`;
+
+    inner += `
+      <div class="flashcard"
+           style="background: linear-gradient(145deg, ${L.color}, ${L.dark});"
+           onclick="speakLetter('${L.u}')">
+        ${letterHTML}
+        <div class="card-emoji">${L.emoji}</div>
+        <div class="card-word">${L.word}</div>
+        <div class="tap-hint">👆 タップして おとをきく</div>
+      </div>
+      <div class="nav-row">
+        <button class="nav-btn" onclick="goPrev()">◀</button>
+        <div class="letter-counter">${idx+1} / 26</div>
+        <button class="nav-btn" onclick="goNext()">▶</button>
+      </div>
+      <div class="btn-row">
+        <button class="sound-btn btn-letter" onclick="speakLetter('${L.u}')">🔊 もじの おと</button>
+        <button class="sound-btn btn-word"   onclick="speakWord('${L.word}')">🔊 ことばを きく</button>
+      </div>
+      <div class="case-toggle">
+        <button class="case-btn ${showCase==='upper'?'active':''}" onclick="setCase('upper')">大文字 ABC</button>
+        <button class="case-btn ${showCase==='lower'?'active':''}" onclick="setCase('lower')">小文字 abc</button>
+        <button class="case-btn ${showCase==='both'?'active':''}"  onclick="setCase('both')">りょうほう</button>
+      </div>
+      <div class="grid-title">えらんでね</div>
+      <div class="letter-grid">
+        ${LETTERS.map((lt,i)=>`
+          <button class="grid-btn ${i===idx?'active':''}"
+                  style="${i===idx?`background:${lt.color};`:''}"
+                  onclick="goTo(${i})">${lt.u}</button>
+        `).join('')}
+      </div>
+    `;
+
+  } else if (mode === 'trace') {
+    const displayLetter = traceCase === 'lower' ? L.l : L.u;
+    inner += `
+      <div class="trace-container">
+        <div class="nav-row" style="width:100%">
+          <button class="nav-btn" onclick="tracePrev()">◀</button>
+          <div class="trace-letter-display" style="color:${L.color};">${displayLetter}</div>
+          <button class="nav-btn" onclick="traceNext()">▶</button>
+        </div>
+        <div class="trace-word-hint">${L.emoji} ${L.word}</div>
+        <div class="case-toggle" style="width:100%;margin-bottom:14px;">
+          <button class="case-btn ${traceCase==='upper'?'active':''}" onclick="setTraceCase('upper')">大文字 ${L.u}</button>
+          <button class="case-btn ${traceCase==='lower'?'active':''}" onclick="setTraceCase('lower')">小文字 ${L.l}</button>
+        </div>
+        <canvas id="traceCanvas"></canvas>
+        <div class="trace-controls">
+          <button class="btn-clear" onclick="clearTrace()">🔄 やりなおし</button>
+          <button class="btn-done"  onclick="celebrate()">⭐ できた！</button>
+        </div>
+        <div class="btn-row" style="margin-top:12px;width:100%;">
+          <button class="sound-btn btn-letter" onclick="speakLetter('${L.u}')">🔊 おとをきく</button>
+          <button class="sound-btn btn-word"   onclick="speakWord('${L.word}')">🔊 ことば</button>
+        </div>
+        <div class="trace-hint">うすい もじを なぞってみよう ✏️<br>ゆびでも OK！</div>
+      </div>
+    `;
+  }
 
   app.innerHTML = inner;
-
-  if (mode === 'trace') {
-    requestAnimationFrame(initCanvas);
-  }
+  if (mode === 'trace') requestAnimationFrame(initCanvas);
 }
 
 // ═══════════════════════════════════════════════
@@ -1172,6 +1294,7 @@ function setQuizType(t) {
   quizQ = null;
   quizAnswered = null;
   quizChosen = -1;
+  writeHintShown = false;
   render();
 }
 function goPrev()  { idx = (idx - 1 + 26) % 26; render(); }
@@ -1185,6 +1308,140 @@ function setTraceCase(c) { traceCase = c; render(); }
 
 function clearTrace() {
   if (ctx) { ctx.globalAlpha = 1; drawGuide(); }
+}
+
+// ═══════════════════════════════════════════════
+//  WRITE-QUIZ CANVAS
+// ═══════════════════════════════════════════════
+function initWriteCanvas() {
+  writeCanvas = document.getElementById('writeCanvas');
+  if (!writeCanvas) return;
+  const size = Math.min(window.innerWidth - 72, 320);
+  writeCanvas.width  = size;
+  writeCanvas.height = size;
+  writeCtx = writeCanvas.getContext('2d');
+  drawWriteBackground();
+  if (writeHintShown) drawWriteHintGuide();
+  bindWriteCanvasEvents();
+}
+
+function drawWriteBackground() {
+  if (!writeCtx) return;
+  const size = writeCanvas.width;
+  writeCtx.fillStyle = '#FAFBFF';
+  writeCtx.fillRect(0, 0, size, size);
+  // dashed baseline
+  writeCtx.save();
+  writeCtx.strokeStyle = '#D8D8F0';
+  writeCtx.lineWidth = 1.5;
+  writeCtx.setLineDash([7, 7]);
+  writeCtx.beginPath();
+  writeCtx.moveTo(16, size * 0.72);
+  writeCtx.lineTo(size - 16, size * 0.72);
+  writeCtx.stroke();
+  writeCtx.setLineDash([]);
+  writeCtx.restore();
+}
+
+function drawWriteHintGuide() {
+  if (!writeCtx || !quizQ) return;
+  const ansL = LETTERS[quizQ.answerIdx];
+  const size = writeCanvas.width;
+  writeCtx.font = `900 ${size * 0.68}px 'Nunito', sans-serif`;
+  writeCtx.textAlign = 'center';
+  writeCtx.textBaseline = 'middle';
+  writeCtx.fillStyle = 'rgba(160,150,230,0.2)';
+  writeCtx.fillText(ansL.u, size / 2, size * 0.48);
+  writeCtx.strokeStyle = 'rgba(100,100,200,0.28)';
+  writeCtx.lineWidth = 2.5;
+  writeCtx.setLineDash([5, 5]);
+  writeCtx.strokeText(ansL.u, size / 2, size * 0.48);
+  writeCtx.setLineDash([]);
+}
+
+function showWriteHint() {
+  writeHintShown = true;
+  if (writeCtx) {
+    // redraw background then overlay hint (keep existing strokes — redraw them is complex, so just overlay the guide on top)
+    drawWriteBackground();
+    drawWriteHintGuide();
+  }
+  render();
+}
+
+function clearWriteCanvas() {
+  writeHintShown = false;
+  if (writeCtx) {
+    drawWriteBackground();
+  }
+  render();
+}
+
+function bindWriteCanvasEvents() {
+  if (!writeCanvas) return;
+
+  const getPos = (e) => {
+    const r  = writeCanvas.getBoundingClientRect();
+    const sx = writeCanvas.width  / r.width;
+    const sy = writeCanvas.height / r.height;
+    return { x: (e.clientX - r.left)*sx, y: (e.clientY - r.top)*sy };
+  };
+
+  const beginStroke = (x, y) => {
+    writeIsDrawing = true;
+    writeCtx.beginPath();
+    writeCtx.moveTo(x, y);
+    const col = quizQ ? LETTERS[quizQ.answerIdx].color : '#667EEA';
+    writeCtx.strokeStyle = col;
+    writeCtx.lineWidth   = 20;
+    writeCtx.lineCap     = 'round';
+    writeCtx.lineJoin    = 'round';
+    writeCtx.globalAlpha = 0.92;
+  };
+
+  const continueStroke = (x, y) => {
+    if (!writeIsDrawing) return;
+    writeCtx.lineTo(x, y);
+    writeCtx.stroke();
+    writeCtx.beginPath();
+    writeCtx.moveTo(x, y);
+  };
+
+  const endStroke = () => { writeIsDrawing = false; writeCtx.globalAlpha = 1; };
+
+  writeCanvas.addEventListener('mousedown',  (e) => { const p=getPos(e); beginStroke(p.x, p.y); });
+  writeCanvas.addEventListener('mousemove',  (e) => { const p=getPos(e); continueStroke(p.x, p.y); });
+  writeCanvas.addEventListener('mouseup',    endStroke);
+  writeCanvas.addEventListener('mouseleave', endStroke);
+
+  writeCanvas.addEventListener('touchstart', (e) => {
+    e.preventDefault();
+    const t=e.touches[0], r=writeCanvas.getBoundingClientRect();
+    beginStroke((t.clientX-r.left)*(writeCanvas.width/r.width), (t.clientY-r.top)*(writeCanvas.height/r.height));
+  }, { passive:false });
+
+  writeCanvas.addEventListener('touchmove', (e) => {
+    e.preventDefault();
+    const t=e.touches[0], r=writeCanvas.getBoundingClientRect();
+    continueStroke((t.clientX-r.left)*(writeCanvas.width/r.width), (t.clientY-r.top)*(writeCanvas.height/r.height));
+  }, { passive:false });
+
+  writeCanvas.addEventListener('touchend', endStroke);
+}
+
+function writeQuizResult(success) {
+  quizAnswered = success ? 'correct' : 'wrong';
+  quizScore.total++;
+  if (success) {
+    quizScore.correct++;
+    launchConfetti();
+    speak('Great job!', 0.9);
+    totalStars++;
+  } else {
+    speak('Keep practicing!', 0.9);
+  }
+  writeHintShown = false;
+  render();
 }
 
 // ═══════════════════════════════════════════════
