@@ -1268,6 +1268,15 @@ function render() {
           <button class="sound-btn btn-word"   onclick="speakWord('${L.word}')">🔊 ことば</button>
         </div>
         <div class="trace-hint">うすい もじを なぞってみよう ✏️<br>ゆびでも OK！</div>
+
+        <div class="grid-title" style="margin-top:18px;width:100%;">えらんでね</div>
+        <div class="letter-grid" style="width:100%;">
+          ${LETTERS.map((lt,i)=>`
+            <button class="grid-btn ${i===idx?'active':''}"
+                    style="${i===idx?`background:${lt.color};`:''}"
+                    onclick="goTo(${i})">${lt.u}</button>
+          `).join('')}
+        </div>
       </div>
     `;
   }
