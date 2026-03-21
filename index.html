@@ -758,7 +758,7 @@ function speak(text, rate=0.82) {
   window.speechSynthesis.speak(u);
 }
 
-function speakLetter(upper) { speak(PHONICS[upper], 0.75); }
+function speakLetter(upper) { speak(upper.toLowerCase(), 0.75); }
 function speakWord(word) { speak(word, 0.78); }
 
 // ═══════════════════════════════════════════════
