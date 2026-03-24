@@ -669,6 +669,76 @@
     }
 
     .btn-write-hard:active { transform: scale(0.95); }
+
+    /* ── Stroke order guide ── */
+    .stroke-guide-wrap {
+      width: 100%;
+      background: #f8f8fc;
+      border-radius: 20px;
+      padding: 12px;
+      margin-bottom: 14px;
+    }
+
+    .stroke-guide-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 10px;
+    }
+
+    .stroke-guide-title {
+      font-size: 15px;
+      font-weight: 700;
+      color: #667eea;
+    }
+
+    .btn-stroke-toggle {
+      border: none;
+      border-radius: 12px;
+      padding: 8px 14px;
+      font-size: 14px;
+      font-weight: 700;
+      font-family: 'Nunito', sans-serif;
+      cursor: pointer;
+      transition: all 0.2s;
+      background: #667eea;
+      color: white;
+    }
+
+    .btn-stroke-toggle.hidden {
+      background: #e8e8f0;
+      color: #888;
+    }
+
+    #strokeGuideCanvas {
+      display: block;
+      border-radius: 14px;
+      border: 2px solid #e0e0f0;
+      max-width: 100%;
+    }
+
+    .stroke-legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 8px;
+    }
+
+    .stroke-legend-item {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 13px;
+      font-weight: 700;
+      color: #555;
+    }
+
+    .stroke-dot {
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
   </style>
 </head>
 <body>
@@ -707,6 +777,72 @@ const LETTERS = [
   { u:'Z', l:'z', word:'Zebra',      emoji:'🦓', color:'#778CA3', dark:'#667B92' },
 ];
 
+// ═══════════════════════════════════════════════
+//  STROKE ORDER DATA  (coordinates: 0-100 grid)
+//  Each letter = array of strokes
+//  Each stroke  = array of [x, y] waypoints
+// ═══════════════════════════════════════════════
+const STROKE_DATA = {
+  upper: {
+    A:[[[50,5],[18,95]],[[50,5],[82,95]],[[25,62],[75,62]]],
+    B:[[[20,5],[20,95]],[[20,5],[60,5],[72,20],[60,48],[20,48]],[[20,48],[65,48],[78,65],[65,90],[20,90]]],
+    C:[[[78,22],[60,8],[35,8],[18,22],[12,50],[18,78],[35,92],[60,92],[78,78]]],
+    D:[[[20,5],[20,95]],[[20,5],[52,5],[78,20],[78,50],[78,80],[52,95],[20,95]]],
+    E:[[[20,5],[20,95]],[[20,5],[75,5]],[[20,50],[62,50]],[[20,95],[75,95]]],
+    F:[[[20,5],[20,95]],[[20,5],[75,5]],[[20,50],[62,50]]],
+    G:[[[78,22],[60,8],[35,8],[18,22],[12,50],[18,78],[35,92],[60,92],[78,78],[78,50]],[[52,50],[78,50]]],
+    H:[[[20,5],[20,95]],[[80,5],[80,95]],[[20,50],[80,50]]],
+    I:[[[50,5],[50,95]]],
+    J:[[[62,5],[62,75],[52,90],[32,92],[20,82]]],
+    K:[[[20,5],[20,95]],[[75,5],[20,50]],[[20,50],[75,95]]],
+    L:[[[20,5],[20,95]],[[20,95],[75,95]]],
+    M:[[[15,92],[15,8]],[[15,8],[50,55]],[[50,55],[85,8]],[[85,8],[85,92]]],
+    N:[[[18,92],[18,8]],[[18,8],[82,92]],[[82,8],[82,92]]],
+    O:[[[50,5],[28,8],[12,28],[12,50],[12,72],[28,92],[50,95],[72,92],[88,72],[88,50],[88,28],[72,8],[50,5]]],
+    P:[[[20,5],[20,95]],[[20,5],[62,5],[75,18],[62,50],[20,50]]],
+    Q:[[[50,5],[28,8],[12,28],[12,50],[12,72],[28,92],[50,95],[72,92],[88,72],[88,50],[88,28],[72,8],[50,5]],[[60,72],[82,95]]],
+    R:[[[20,5],[20,95]],[[20,5],[62,5],[75,18],[62,50],[20,50]],[[38,50],[78,95]]],
+    S:[[[78,18],[60,8],[35,10],[18,26],[28,42],[52,50],[72,58],[82,75],[70,88],[45,92],[22,82]]],
+    T:[[[15,5],[85,5]],[[50,5],[50,95]]],
+    U:[[[18,5],[18,68],[28,85],[50,92],[72,85],[82,68],[82,5]]],
+    V:[[[15,5],[50,95]],[[85,5],[50,95]]],
+    W:[[[10,5],[25,92]],[[25,92],[50,52]],[[50,52],[75,92]],[[75,92],[90,5]]],
+    X:[[[15,5],[85,95]],[[85,5],[15,95]]],
+    Y:[[[15,5],[50,52]],[[85,5],[50,52]],[[50,52],[50,95]]],
+    Z:[[[15,5],[85,5]],[[85,5],[15,95]],[[15,95],[85,95]]],
+  },
+  lower: {
+    a:[[[72,28],[55,18],[32,20],[18,35],[18,55],[32,72],[55,75],[72,68]],[[72,28],[72,75]]],
+    b:[[[22,5],[22,75]],[[22,38],[40,28],[62,30],[72,45],[72,58],[62,72],[40,75],[22,68]]],
+    c:[[[68,28],[52,18],[28,22],[15,38],[15,58],[28,72],[52,78],[68,68]]],
+    d:[[[78,5],[78,75]],[[78,38],[60,28],[38,28],[22,38],[22,58],[38,72],[60,75],[78,68]]],
+    e:[[[15,48],[72,48],[72,35],[58,18],[35,18],[18,35],[18,55],[32,72],[55,78],[72,68]]],
+    f:[[[65,10],[52,5],[38,12],[32,28],[32,90]],[[18,42],[60,42]]],
+    g:[[[72,28],[55,18],[32,20],[18,35],[18,55],[32,72],[55,75],[72,65]],[[72,28],[72,88],[60,98],[35,98],[22,88]]],
+    h:[[[22,5],[22,75]],[[22,42],[40,30],[60,28],[72,40],[72,75]]],
+    i:[[[50,30],[50,75]],[[50,12],[50,20]]],
+    j:[[[55,30],[55,82],[42,95],[25,88]],[[55,12],[55,20]]],
+    k:[[[22,5],[22,75]],[[68,28],[22,52]],[[22,52],[68,75]]],
+    l:[[[50,5],[50,75]]],
+    m:[[[18,30],[18,75]],[[18,42],[32,28],[50,28],[58,40],[58,75]],[[58,42],[72,28],[87,28],[90,40],[90,75]]],
+    n:[[[22,30],[22,75]],[[22,42],[40,28],[62,28],[72,40],[72,75]]],
+    o:[[[50,18],[28,22],[15,38],[15,58],[28,72],[50,78],[72,72],[85,58],[85,38],[72,22],[50,18]]],
+    p:[[[22,30],[22,95]],[[22,38],[42,28],[62,30],[72,45],[72,58],[62,72],[42,75],[22,68]]],
+    q:[[[78,30],[78,95]],[[78,38],[58,28],[38,30],[28,45],[28,58],[38,72],[58,75],[78,68]]],
+    r:[[[22,30],[22,75]],[[22,45],[38,30],[58,28],[68,35]]],
+    s:[[[68,25],[52,18],[28,22],[18,35],[30,48],[52,52],[68,62],[62,75],[38,78],[18,68]]],
+    t:[[[50,8],[50,75]],[[22,38],[72,38]]],
+    u:[[[22,28],[22,62],[32,75],[52,78],[68,68],[72,28]],[[72,28],[72,75]]],
+    v:[[[18,28],[50,78]],[[82,28],[50,78]]],
+    w:[[[12,28],[25,78]],[[25,78],[50,48]],[[50,48],[75,78]],[[75,78],[88,28]]],
+    x:[[[18,28],[82,78]],[[82,28],[18,78]]],
+    y:[[[18,28],[50,62]],[[82,28],[50,62],[38,85],[25,90]]],
+    z:[[[18,28],[78,28]],[[78,28],[18,78]],[[18,78],[78,78]]],
+  }
+};
+
+const STROKE_COLORS = ['#E74C3C','#2980B9','#27AE60','#8E44AD','#E67E22','#16A085'];
+
 const PHONICS = {
   A:'ay',B:'bee',C:'see',D:'dee',E:'ee',F:'ef',G:'jee',H:'aitch',I:'eye',J:'jay',
   K:'kay',L:'el',M:'em',N:'en',O:'oh',P:'pee',Q:'cue',R:'ar',S:'ess',T:'tee',
@@ -742,8 +878,13 @@ let quizChosen   = -1;
 let quizDone     = false;
 const QUIZ_MAX   = 10;
 
+// ── Stroke order guide state ──
+let showStrokeGuide = false;
+
 // ── Write-quiz state ──
-let writeHintShown = false;
+let writeHintShown        = false;
+let writeStrokeGuideShown = false; // ヒント内の書き順ガイド開閉
+let writeCase             = 'upper'; // 'upper' | 'lower'
 let writeCanvas, writeCtx;
 let writeIsDrawing = false;
 
@@ -946,6 +1087,7 @@ function startQuiz() {
   quizAnswered = null;
   quizChosen = -1;
   writeHintShown = false;
+  writeStrokeGuideShown = false;
   generateQuestion();
   render();
 }
@@ -1070,7 +1212,15 @@ function render() {
       // ════════════════════════════════
       if (quizType === 'write') {
 
-        // Question box — sound only
+        // ── 大文字 / 小文字 トグル ──
+        inner += `
+          <div class="case-toggle" style="margin-bottom:12px;">
+            <button class="case-btn ${writeCase==='upper'?'active':''}" onclick="setWriteCase('upper')">大文字 ABC</button>
+            <button class="case-btn ${writeCase==='lower'?'active':''}" onclick="setWriteCase('lower')">小文字 abc</button>
+          </div>
+        `;
+
+        // ── Question box — sound only ──
         inner += `
           <div class="quiz-question-box">
             <div class="quiz-question-label">おとを きいて もじを かこう！</div>
@@ -1081,11 +1231,12 @@ function render() {
 
         if (quizAnswered !== null) {
           // ── After self-assessment: show answer + next ──
-          const isOk = quizAnswered === 'correct';
+          const isOk  = quizAnswered === 'correct';
+          const shown = writeCase === 'lower' ? ansL.l : ansL.u;
           inner += `
             <div style="text-align:center;padding:14px 0 6px;">
-              <div style="font-size:64px;font-weight:900;color:${ansL.color};">${ansL.u}</div>
-              <div style="font-size:22px;color:#555;font-weight:700;">${ansL.l} &nbsp; ${ansL.emoji} ${ansL.word}</div>
+              <div style="font-size:64px;font-weight:900;color:${ansL.color};">${shown}</div>
+              <div style="font-size:22px;color:#555;font-weight:700;">${ansL.u} / ${ansL.l} &nbsp; ${ansL.emoji} ${ansL.word}</div>
             </div>
             <div style="text-align:center;font-size:18px;font-weight:700;color:${isOk?'#1DD1A1':'#FF6B6B'};margin:8px 0 12px;">
               ${isOk ? '✨ よくできた！' : '😊 また れんしゅうしよう！'}
@@ -1093,12 +1244,38 @@ function render() {
             <button class="quiz-next-btn" onclick="nextQuizQuestion()">つぎの もんだい ▶</button>
           `;
         } else {
-          // ── Canvas + hint/done buttons ──
+          // ── Hint stroke guide HTML (shown when hint is active) ──
+          const hintGuideHTML = writeHintShown ? `
+            <div class="stroke-guide-wrap" style="width:100%;margin-bottom:12px;">
+              <div class="stroke-guide-header">
+                <div class="stroke-guide-title">📖 書き順ガイド（${writeCase==='lower'?ansL.l:ansL.u}）</div>
+                <button class="btn-stroke-toggle ${writeStrokeGuideShown?'':'hidden'}" onclick="toggleWriteStrokeGuide()">
+                  ${writeStrokeGuideShown ? '▲ とじる' : '▼ みる'}
+                </button>
+              </div>
+              ${writeStrokeGuideShown ? `
+                <canvas id="writeStrokeGuideCanvas" style="width:100%;border-radius:14px;border:2px solid #e0e0f0;display:block;"></canvas>
+                <div class="stroke-legend">
+                  ${(writeCase==='lower'
+                      ? STROKE_DATA.lower[ansL.l]
+                      : STROKE_DATA.upper[ansL.u]
+                    ).map((_,si)=>`
+                      <div class="stroke-legend-item">
+                        <div class="stroke-dot" style="background:${STROKE_COLORS[si%STROKE_COLORS.length]};"></div>
+                        <span>${si+1}かくめ</span>
+                      </div>`).join('')}
+                </div>
+              ` : ''}
+            </div>
+          ` : '';
+
+          // ── Canvas + buttons ──
           inner += `
-            <div style="display:flex;flex-direction:column;align-items:center;">
+            <div style="display:flex;flex-direction:column;align-items:center;width:100%;">
+              ${hintGuideHTML}
               <canvas id="writeCanvas"></canvas>
               <div class="write-btns">
-                <button class="btn-clear"  onclick="clearWriteCanvas()">🔄 やりなおし</button>
+                <button class="btn-clear" onclick="clearWriteCanvas()">🔄 やりなおし</button>
                 <button class="btn-hint ${writeHintShown?'shown':''}" onclick="showWriteHint()">
                   ${writeHintShown ? '👻 ヒントちゅう' : '💡 ヒント'}
                 </button>
@@ -1182,7 +1359,10 @@ function render() {
 
     app.innerHTML = inner;
     if (quizType === 'write' && !quizDone && quizAnswered === null) {
-      requestAnimationFrame(initWriteCanvas);
+      requestAnimationFrame(() => {
+        initWriteCanvas();
+        if (writeHintShown && writeStrokeGuideShown) initWriteStrokeGuideCanvas();
+      });
     }
     return;
   }
@@ -1258,6 +1438,30 @@ function render() {
           <button class="case-btn ${traceCase==='upper'?'active':''}" onclick="setTraceCase('upper')">大文字 ${L.u}</button>
           <button class="case-btn ${traceCase==='lower'?'active':''}" onclick="setTraceCase('lower')">小文字 ${L.l}</button>
         </div>
+
+        <!-- ── Stroke order guide ── -->
+        <div class="stroke-guide-wrap" style="width:100%;">
+          <div class="stroke-guide-header">
+            <div class="stroke-guide-title">📖 書き順ガイド</div>
+            <button class="btn-stroke-toggle ${showStrokeGuide?'':'hidden'}" onclick="toggleStrokeGuide()">
+              ${showStrokeGuide ? '▲ とじる' : '▼ みる'}
+            </button>
+          </div>
+          ${showStrokeGuide ? `
+            <canvas id="strokeGuideCanvas" style="width:100%;"></canvas>
+            <div class="stroke-legend">
+              ${(traceCase==='lower'
+                  ? STROKE_DATA.lower[L.l]
+                  : STROKE_DATA.upper[L.u]
+                ).map((_, si) => `
+                  <div class="stroke-legend-item">
+                    <div class="stroke-dot" style="background:${STROKE_COLORS[si % STROKE_COLORS.length]};"></div>
+                    <span>${si+1}かくめ</span>
+                  </div>`).join('')}
+            </div>
+          ` : ''}
+        </div>
+
         <canvas id="traceCanvas"></canvas>
         <div class="trace-controls">
           <button class="btn-clear" onclick="clearTrace()">🔄 やりなおし</button>
@@ -1282,7 +1486,10 @@ function render() {
   }
 
   app.innerHTML = inner;
-  if (mode === 'trace') requestAnimationFrame(initCanvas);
+  if (mode === 'trace') {
+    requestAnimationFrame(initCanvas);
+    if (showStrokeGuide) requestAnimationFrame(initStrokeGuideCanvas);
+  }
 }
 
 // ═══════════════════════════════════════════════
@@ -1304,6 +1511,21 @@ function setQuizType(t) {
   quizAnswered = null;
   quizChosen = -1;
   writeHintShown = false;
+  writeStrokeGuideShown = false;
+  render();
+}
+
+function setWriteCase(c) {
+  writeCase = c;
+  writeHintShown = false;
+  writeStrokeGuideShown = false;
+  quizQ = null;
+  quizAnswered = null;
+  render();
+}
+
+function toggleWriteStrokeGuide() {
+  writeStrokeGuideShown = !writeStrokeGuideShown;
   render();
 }
 function goPrev()  { idx = (idx - 1 + 26) % 26; render(); }
@@ -1320,6 +1542,104 @@ function clearTrace() {
 }
 
 // ═══════════════════════════════════════════════
+//  STROKE ORDER GUIDE CANVAS
+// ═══════════════════════════════════════════════
+function initStrokeGuideCanvas() {
+  const gc = document.getElementById('strokeGuideCanvas');
+  if (!gc) return;
+  const size = Math.min(window.innerWidth - 100, 300);
+  gc.width  = size;
+  gc.height = size;
+  drawStrokeGuide(gc, idx, traceCase === 'lower');
+}
+
+function drawStrokeGuide(gc, letterIdx, isLower) {
+  const gCtx = gc.getContext('2d');
+  const size  = gc.width;
+  const sc    = size / 100; // scale factor
+
+  // Background
+  gCtx.fillStyle = '#FAFBFF';
+  gCtx.fillRect(0, 0, size, size);
+
+  // Guide lines (matching the "建て" concept from the image)
+  const lines = isLower
+    ? [{ y:8, dash:true }, { y:30, dash:true }, { y:72, dash:false }, { y:92, dash:true }]
+    : [{ y:8, dash:false }, { y:72, dash:false }];
+
+  lines.forEach(({ y, dash }) => {
+    gCtx.save();
+    gCtx.strokeStyle = '#C0D0F0';
+    gCtx.lineWidth = 1.2;
+    if (dash) gCtx.setLineDash([5, 5]);
+    gCtx.beginPath();
+    gCtx.moveTo(6, y * sc);
+    gCtx.lineTo(size - 6, y * sc);
+    gCtx.stroke();
+    gCtx.setLineDash([]);
+    gCtx.restore();
+  });
+
+  const L      = LETTERS[letterIdx];
+  const key    = isLower ? L.l : L.u;
+  const strokes = isLower ? STROKE_DATA.lower[key] : STROKE_DATA.upper[key];
+  if (!strokes) return;
+
+  strokes.forEach((pts, si) => {
+    const color = STROKE_COLORS[si % STROKE_COLORS.length];
+
+    // Draw stroke path
+    gCtx.save();
+    gCtx.strokeStyle = color;
+    gCtx.lineWidth   = Math.max(2.5, size * 0.012);
+    gCtx.lineCap     = 'round';
+    gCtx.lineJoin    = 'round';
+    gCtx.globalAlpha = 0.9;
+    gCtx.beginPath();
+    gCtx.moveTo(pts[0][0] * sc, pts[0][1] * sc);
+    for (let i = 1; i < pts.length; i++) {
+      gCtx.lineTo(pts[i][0] * sc, pts[i][1] * sc);
+    }
+    gCtx.stroke();
+
+    // Arrowhead at end
+    const last = pts[pts.length - 1];
+    const prev = pts.length > 1 ? pts[pts.length - 2] : pts[0];
+    const angle = Math.atan2((last[1] - prev[1]) * sc, (last[0] - prev[0]) * sc);
+    const aw = Math.max(6, size * 0.04);
+    gCtx.beginPath();
+    gCtx.moveTo(last[0] * sc, last[1] * sc);
+    gCtx.lineTo(last[0] * sc - aw * Math.cos(angle - 0.45), last[1] * sc - aw * Math.sin(angle - 0.45));
+    gCtx.moveTo(last[0] * sc, last[1] * sc);
+    gCtx.lineTo(last[0] * sc - aw * Math.cos(angle + 0.45), last[1] * sc - aw * Math.sin(angle + 0.45));
+    gCtx.lineWidth = Math.max(2, size * 0.009);
+    gCtx.stroke();
+    gCtx.restore();
+
+    // Numbered circle at stroke start
+    const sx  = pts[0][0] * sc;
+    const sy  = pts[0][1] * sc;
+    const rad = Math.max(9, size * 0.062);
+    gCtx.save();
+    gCtx.fillStyle = color;
+    gCtx.beginPath();
+    gCtx.arc(sx, sy, rad, 0, Math.PI * 2);
+    gCtx.fill();
+    gCtx.fillStyle = 'white';
+    gCtx.font = `900 ${Math.round(rad * 1.1)}px Nunito, sans-serif`;
+    gCtx.textAlign    = 'center';
+    gCtx.textBaseline = 'middle';
+    gCtx.fillText(si + 1, sx, sy + 1);
+    gCtx.restore();
+  });
+}
+
+function toggleStrokeGuide() {
+  showStrokeGuide = !showStrokeGuide;
+  render();
+}
+
+// ═══════════════════════════════════════════════
 //  WRITE-QUIZ CANVAS
 // ═══════════════════════════════════════════════
 function initWriteCanvas() {
@@ -1332,6 +1652,17 @@ function initWriteCanvas() {
   drawWriteBackground();
   if (writeHintShown) drawWriteHintGuide();
   bindWriteCanvasEvents();
+  // also init stroke guide canvas if hint + guide are both shown
+  if (writeHintShown && writeStrokeGuideShown) initWriteStrokeGuideCanvas();
+}
+
+function initWriteStrokeGuideCanvas() {
+  const gc = document.getElementById('writeStrokeGuideCanvas');
+  if (!gc || !quizQ) return;
+  const size = Math.min(window.innerWidth - 100, 300);
+  gc.width  = size;
+  gc.height = size;
+  drawStrokeGuide(gc, quizQ.answerIdx, writeCase === 'lower');
 }
 
 function drawWriteBackground() {
@@ -1355,31 +1686,28 @@ function drawWriteBackground() {
 function drawWriteHintGuide() {
   if (!writeCtx || !quizQ) return;
   const ansL = LETTERS[quizQ.answerIdx];
+  const letter = writeCase === 'lower' ? ansL.l : ansL.u;
   const size = writeCanvas.width;
   writeCtx.font = `900 ${size * 0.68}px 'Nunito', sans-serif`;
   writeCtx.textAlign = 'center';
   writeCtx.textBaseline = 'middle';
   writeCtx.fillStyle = 'rgba(160,150,230,0.2)';
-  writeCtx.fillText(ansL.u, size / 2, size * 0.48);
+  writeCtx.fillText(letter, size / 2, size * 0.48);
   writeCtx.strokeStyle = 'rgba(100,100,200,0.28)';
   writeCtx.lineWidth = 2.5;
   writeCtx.setLineDash([5, 5]);
-  writeCtx.strokeText(ansL.u, size / 2, size * 0.48);
+  writeCtx.strokeText(letter, size / 2, size * 0.48);
   writeCtx.setLineDash([]);
 }
 
 function showWriteHint() {
   writeHintShown = true;
-  if (writeCtx) {
-    // redraw background then overlay hint (keep existing strokes — redraw them is complex, so just overlay the guide on top)
-    drawWriteBackground();
-    drawWriteHintGuide();
-  }
   render();
 }
 
 function clearWriteCanvas() {
   writeHintShown = false;
+  writeStrokeGuideShown = false;
   if (writeCtx) {
     drawWriteBackground();
   }
@@ -1450,6 +1778,7 @@ function writeQuizResult(success) {
     speak('Keep practicing!', 0.9);
   }
   writeHintShown = false;
+  writeStrokeGuideShown = false;
   render();
 }
 
